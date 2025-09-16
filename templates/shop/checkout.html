@@ -1,0 +1,287 @@
+# templates/shop/checkout.html
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Checkout - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Checkout</h2>
+            
+            <form method="post" action="{% url 'process_order' %}" id="checkoutForm">
+                {% csrf_token %}
+                <div class="row">
+                    <!-- Customer Information -->
+                    <div class="col-lg-7">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>Customer Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="customer_name" class="form-label">Full Name *</label>
+                                        <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                               value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="customer_phone" class="form-label">Phone Number *</label>
+                                        <input type="tel" class="form-control" id="customer_phone" name="customer_phone" 
+                                               value="{% if user.is_authenticated %}{{ user.phone }}{% endif %}" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="customer_email" class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" id="customer_email" name="customer_email" 
+                                           value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Shipping Address -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Shipping Address
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="shipping_address" class="form-label">Full Address *</label>
+                                    <textarea class="form-control" id="shipping_address" name="shipping_address" rows="3" 
+                                              placeholder="House/Flat, Road, Area, Landmark" required>{% if user.is_authenticated %}{{ user.address }}{% endif %}</textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="shipping_city" class="form-label">City *</label>
+                                        <select class="form-select" id="shipping_city" name="shipping_city" required>
+                                            <option value="">Select City</option>
+                                            <option value="Dhaka" {% if user.is_authenticated and user.city == 'Dhaka' %}selected{% endif %}>Dhaka</option>
+                                            <option value="Chittagong">Chittagong</option>
+                                            <option value="Sylhet">Sylhet</option>
+                                            <option value="Rajshahi">Rajshahi</option>
+                                            <option value="Khulna">Khulna</option>
+                                            <option value="Barisal">Barisal</option>
+                                            <option value="Rangpur">Rangpur</option>
+                                            <option value="Mymensingh">Mymensingh</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="shipping_postal_code" class="form-label">Postal Code</label>
+                                        <input type="text" class="form-control" id="shipping_postal_code" name="shipping_postal_code" 
+                                               value="{% if user.is_authenticated %}{{ user.postal_code }}{% endif %}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delivery Method -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-truck me-2"></i>Delivery Method
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% for courier in courier_services %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="courier_service" value="{{ courier.id }}" id="courier{{ courier.id }}" {% if forloop.first %}checked{% endif %}>
+                                        <label class="form-check-label" for="courier{{ courier.id }}">
+                                            <strong>{{ courier.name }}</strong>
+                                            {% if courier.delivery_time %}
+                                                <span class="text-muted">({{ courier.delivery_time }})</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                {% empty %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="courier_service" value="" id="standard" checked>
+                                        <label class="form-check-label" for="standard">
+                                            <strong>Standard Delivery</strong>
+                                            <span class="text-muted">(2-3 business days)</span>
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-credit-card me-2"></i>Payment Method
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="cod" id="cod" checked>
+                                    <label class="form-check-label" for="cod">
+                                        <i class="fas fa-money-bill-wave me-2"></i>
+                                        <strong>Cash on Delivery (COD)</strong>
+                                        <div class="text-muted small">Pay when you receive your order</div>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" value="online" id="online">
+                                    <label class="form-check-label" for="online">
+                                        <i class="fas fa-credit-card me-2"></i>
+                                        <strong>Online Payment</strong>
+                                        <div class="text-muted small">Pay now with bKash/Nagad/Card</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Notes -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-sticky-note me-2"></i>Order Notes (Optional)
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <textarea class="form-control" name="notes" rows="3" placeholder="Any special instructions for delivery..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Summary -->
+                    <div class="col-lg-5">
+                        <div class="card position-sticky" style="top: 20px;">
+                            <div class="card-header">
+                                <h5 class="mb-0">Order Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Cart Items -->
+                                <div class="order-items mb-3">
+                                    {% for item in cart_items %}
+                                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 {% if not forloop.last %}border-bottom{% endif %}">
+                                            <div class="d-flex align-items-center">
+                                                {% with item.product.images.first as primary_image %}
+                                                    {% if primary_image %}
+                                                        <img src="{{ primary_image.image.url }}" width="40" height="40" class="rounded me-2" alt="{{ item.product.name }}">
+                                                    {% endif %}
+                                                {% endwith %}
+                                                <div>
+                                                    <div class="fw-medium">{{ item.product.name|truncatechars:30 }}</div>
+                                                    <small class="text-muted">Qty: {{ item.quantity }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-medium">৳{{ item.get_total_price|floatformat:0 }}</div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- Price Breakdown -->
+                                <div class="price-breakdown">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal ({{ cart.get_total_items }} items):</span>
+                                        <span>৳{{ subtotal|floatformat:0 }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Shipping:</span>
+                                        <span>৳{{ shipping_cost|floatformat:0 }}</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <strong>Total:</strong>
+                                        <strong class="text-primary">৳{{ total|floatformat:0 }}</strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Place Order Button -->
+                                <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                    <i class="fas fa-lock me-2"></i>Place Order
+                                </button>
+                                
+                                <!-- Security Info -->
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt me-1"></i>
+                                        Your information is secure and encrypted
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Trust Badges -->
+                        <div class="card mt-3">
+                            <div class="card-body text-center">
+                                <div class="row">
+                                    <div class="col-6 mb-2">
+                                        <i class="fas fa-shield-alt text-success"></i>
+                                        <small class="d-block">Secure Payment</small>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <i class="fas fa-undo text-success"></i>
+                                        <small class="d-block">Easy Returns</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="fas fa-headset text-success"></i>
+                                        <small class="d-block">24/7 Support</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <i class="fas fa-truck text-success"></i>
+                                        <small class="d-block">Fast Delivery</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Basic validation
+    const requiredFields = ['customer_name', 'customer_phone', 'customer_email', 'shipping_address', 'shipping_city'];
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        const input = document.getElementById(field);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Email validation
+    const email = document.getElementById('customer_email').value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        document.getElementById('customer_email').classList.add('is-invalid');
+        showToast('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    // Phone validation
+    const phone = document.getElementById('customer_phone').value;
+    if (phone.length < 11) {
+        document.getElementById('customer_phone').classList.add('is-invalid');
+        showToast('Please enter a valid phone number', 'error');
+        return;
+    }
+    
+    // Submit the form
+    this.submit();
+});
+</script>
+{% endblock %}

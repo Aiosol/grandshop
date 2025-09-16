@@ -1,0 +1,397 @@
+# templates/shop/product_detail.html
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ product.name }} - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+            {% if product.category %}
+                <li class="breadcrumb-item"><a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ product.name|truncatechars:30 }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6">
+            <div class="product-images">
+                {% if product.images.all %}
+                    <div class="main-image mb-3">
+                        {% with product.images.first as primary_image %}
+                            <img src="{{ primary_image.image.url }}" class="img-fluid rounded" id="mainProductImage" alt="{{ product.name }}">
+                        {% endwith %}
+                    </div>
+                    
+                    {% if product.images.count > 1 %}
+                        <div class="thumbnail-images">
+                            <div class="row">
+                                {% for image in product.images.all %}
+                                    <div class="col-3 mb-2">
+                                        <img src="{{ image.image.url }}" class="img-fluid rounded thumbnail-img" 
+                                             onclick="changeMainImage('{{ image.image.url }}')" alt="{{ product.name }}"
+                                             style="cursor: pointer; border: 2px solid transparent;">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                        <i class="fas fa-cog text-muted fa-4x"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <div class="product-info">
+                <h1 class="h3 mb-2">{{ product.name }}</h1>
+                <p class="text-muted mb-3">
+                    Brand: <a href="{% url 'brand_products' product.brand.slug %}" class="text-decoration-none">{{ product.brand.name }}</a> |
+                    SKU: {{ product.sku }}
+                </p>
+                
+                <!-- Price -->
+                <div class="price-section mb-4">
+                    {% if product.offer_price %}
+                        <span class="h4 text-danger me-3">৳{{ product.offer_price|floatformat:0 }}</span>
+                        <span class="h6 text-muted text-decoration-line-through">৳{{ product.regular_price|floatformat:0 }}</span>
+                        <span class="badge bg-danger ms-2">{{ product.get_discount_percentage }}% OFF</span>
+                    {% else %}
+                        <span class="h4 text-primary">৳{{ product.regular_price|floatformat:0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Stock Status -->
+                <div class="stock-status mb-4">
+                    {% if product.stock_status == 'in_stock' %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>In Stock ({{ product.stock_quantity }} available)
+                        </span>
+                    {% elif product.stock_status == 'low_stock' %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Low Stock ({{ product.stock_quantity }} left)
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-times me-1"></i>Out of Stock
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Short Description -->
+                {% if product.short_description %}
+                    <div class="short-description mb-4">
+                        <p>{{ product.short_description }}</p>
+                    </div>
+                {% endif %}
+                
+                <!-- Quantity and Actions -->
+                {% if product.is_in_stock %}
+                    <div class="quantity-actions mb-4">
+                        <div class="row">
+                            <div class="col-4">
+                                <label for="quantity" class="form-label">Quantity:</label>
+                                <input type="number" class="form-control" id="quantity" value="1" min="1" max="{{ product.stock_quantity }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="addToCartWithQuantity({{ product.id }})">
+                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="buyNowWithQuantity({{ product.id }})">
+                                    <i class="fas fa-bolt me-1"></i>Buy Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This product is currently out of stock. Please check back later.
+                    </div>
+                {% endif %}
+                
+                <!-- Product Features -->
+                <div class="product-features">
+                    <div class="row text-center">
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fas fa-shield-alt text-primary mb-2"></i>
+                            <small class="d-block">Genuine Product</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fas fa-shipping-fast text-primary mb-2"></i>
+                            <small class="d-block">Fast Delivery</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fas fa-undo text-primary mb-2"></i>
+                            <small class="d-block">Easy Returns</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fas fa-headset text-primary mb-2"></i>
+                            <small class="d-block">24/7 Support</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Details Tabs -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">
+                        Description
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="specifications-tab" data-bs-toggle="tab" data-bs-target="#specifications" type="button" role="tab">
+                        Specifications
+                    </button>
+                </li>
+                {% if compatible_vehicles %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="compatibility-tab" data-bs-toggle="tab" data-bs-target="#compatibility" type="button" role="tab">
+                            Vehicle Compatibility
+                        </button>
+                    </li>
+                {% endif %}
+            </ul>
+            
+            <div class="tab-content" id="productTabsContent">
+                <!-- Description -->
+                <div class="tab-pane fade show active" id="description" role="tabpanel">
+                    <div class="p-4">
+                        {{ product.description|linebreaks }}
+                    </div>
+                </div>
+                
+                <!-- Specifications -->
+                <div class="tab-pane fade" id="specifications" role="tabpanel">
+                    <div class="p-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Brand:</strong></td>
+                                        <td>{{ product.brand.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>SKU:</strong></td>
+                                        <td>{{ product.sku }}</td>
+                                    </tr>
+                                    {% if product.weight %}
+                                        <tr>
+                                            <td><strong>Weight:</strong></td>
+                                            <td>{{ product.weight }} kg</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if product.dimensions %}
+                                        <tr>
+                                            <td><strong>Dimensions:</strong></td>
+                                            <td>{{ product.dimensions }}</td>
+                                        </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless">
+                                    {% if product.warranty_period %}
+                                        <tr>
+                                            <td><strong>Warranty:</strong></td>
+                                            <td>{{ product.warranty_period }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if product.origin_country %}
+                                        <tr>
+                                            <td><strong>Origin:</strong></td>
+                                            <td>{{ product.origin_country }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <td><strong>Category:</strong></td>
+                                        <td>{{ product.category.name }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vehicle Compatibility -->
+                {% if compatible_vehicles %}
+                    <div class="tab-pane fade" id="compatibility" role="tabpanel">
+                        <div class="p-4">
+                            <h6>Compatible Vehicles:</h6>
+                            <div class="row">
+                                {% for vehicle in compatible_vehicles %}
+                                    <div class="col-md-6 mb-2">
+                                        <div class="card">
+                                            <div class="card-body py-2">
+                                                <strong>{{ vehicle.model.brand.name }} {{ vehicle.model.name }}</strong>
+                                                <span class="text-muted">({{ vehicle.year }})</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Continue Shopping -->
+                        <div class="mt-3">
+                            <a href="{% url 'product_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Summary -->
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Order Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span id="cartSubtotal">৳{{ cart.get_total_price|floatformat:0 }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Shipping:</span>
+                                    <span>৳50</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <strong>Total:</strong>
+                                    <strong id="cartTotal">৳{{ cart.get_total_price|add:50|floatformat:0 }}</strong>
+                                </div>
+                                
+                                <a href="{% url 'checkout' %}" class="btn btn-primary w-100">
+                                    <i class="fas fa-lock me-2"></i>Proceed to Checkout
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Delivery Info -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-truck text-primary me-2"></i>Delivery Information
+                                </h6>
+                                <ul class="list-unstyled small mb-0">
+                                    <li><i class="fas fa-check text-success me-2"></i>Free delivery on orders over ৳1000</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>Same day delivery in Dhaka</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>2-3 days delivery outside Dhaka</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Empty Cart -->
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+                    <h4>Your cart is empty</h4>
+                    <p class="text-muted mb-4">Add some products to your cart to continue shopping</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function updateQuantity(itemId, newQuantity) {
+    if (newQuantity < 1) {
+        removeCartItem(itemId);
+        return;
+    }
+    
+    fetch('/update-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `item_id=${itemId}&quantity=${newQuantity}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.removed) {
+                document.getElementById(`cartItem${itemId}`).remove();
+            } else {
+                document.getElementById(`qty${itemId}`).value = newQuantity;
+                document.getElementById(`itemTotal${itemId}`).textContent = `৳${data.item_total}`;
+            }
+            
+            // Update totals
+            document.getElementById('cartSubtotal').textContent = `৳${data.cart_total}`;
+            document.getElementById('cartTotal').textContent = `৳${parseFloat(data.cart_total) + 50}`;
+            updateCartCount(data.cart_count);
+            
+            // Check if cart is empty
+            if (data.cart_count === 0) {
+                location.reload();
+            }
+        } else {
+            showToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error updating cart', 'error');
+    });
+}
+
+function updateQuantityFromInput(itemId) {
+    const quantity = parseInt(document.getElementById(`qty${itemId}`).value);
+    updateQuantity(itemId, quantity);
+}
+
+function removeCartItem(itemId) {
+    if (confirm('Are you sure you want to remove this item?')) {
+        fetch('/remove-cart-item/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: `item_id=${itemId}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById(`cartItem${itemId}`).remove();
+                showToast('Item removed from cart', 'success');
+                
+                // Reload page if cart is empty
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error removing item', 'error');
+        });
+    }
+}
+</script>
+{% endblock %}

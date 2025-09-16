@@ -1,0 +1,150 @@
+// Brand Products Template (templates/shop/brand_products.html)
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ brand.name }} Products - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+            <li class="breadcrumb-item active">{{ brand.name }}</li>
+        </ol>
+    </nav>
+    
+    <!-- Brand Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                {% if brand.logo %}
+                    <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="me-3" style="max-height: 80px;">
+                {% endif %}
+                <div>
+                    <h1 class="h2 mb-1">{{ brand.name }}</h1>
+                    {% if brand.description %}
+                        <p class="text-muted mb-1">{{ brand.description }}</p>
+                    {% endif %}
+                    <small class="text-muted">{{ products.count }} products available</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Products -->
+    <div class="row">
+        <div class="col-12">
+            <!-- Sort and Filter Options -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="text-muted">{{ products.count }} products found</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" onchange="filterByCategory(this.value)">
+                        <option value="">All Categories</option>
+                        {% regroup products by category as category_list %}
+                        {% for category_group in category_list %}
+                            <option value="{{ category_group.grouper.slug }}">{{ category_group.grouper.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select form-select-sm" onchange="changeSort(this.value)">
+                        <option value="name">Name A-Z</option>
+                        <option value="price_low">Price: Low to High</option>
+                        <option value="price_high">Price: High to Low</option>
+                        <option value="newest">Newest First</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Product Grid -->
+            {% if products %}
+                <div class="row">
+                    {% for product in products %}
+                        <div class="col-6 col-md-4 col-lg-3 mb-4">
+                            <div class="card product-card h-100 position-relative">
+                                {% if product.get_discount_percentage %}
+                                    <div class="discount-badge">-{{ product.get_discount_percentage }}%</div>
+                                {% endif %}
+                                
+                                <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+                                    {% with product.images.first as primary_image %}
+                                        {% if primary_image %}
+                                            <img src="{{ primary_image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                <i class="fas fa-image text-muted fa-2x"></i>
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                </a>
+                                
+                                <div class="card-body d-flex flex-column">
+                                    <h6 class="card-title">
+                                        <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">
+                                            {{ product.name|truncatechars:50 }}
+                                        </a>
+                                    </h6>
+                                    
+                                    <small class="text-muted">{{ product.category.name }}</small>
+                                    
+                                    <div class="mt-auto">
+                                        <div class="mb-2">
+                                            {% if product.offer_price %}
+                                                <span class="price-old">৳{{ product.regular_price|floatformat:0 }}</span>
+                                                <span class="price-new">৳{{ product.offer_price|floatformat:0 }}</span>
+                                            {% else %}
+                                                <span class="price-new">৳{{ product.regular_price|floatformat:0 }}</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if product.is_in_stock %}
+                                            <div class="btn-group w-100" role="group">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addToCart({{ product.id }})">
+                                                    <i class="fas fa-cart-plus"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-primary btn-sm flex-grow-1" onclick="buyNow({{ product.id }})">
+                                                    Buy Now
+                                                </button>
+                                            </div>
+                                        {% else %}
+                                            <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                                Out of Stock
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-4x text-muted mb-4"></i>
+                    <h4>No products available</h4>
+                    <p class="text-muted">{{ brand.name }} products coming soon</p>
+                    <a href="{% url 'product_list' %}" class="btn btn-primary">Browse All Products</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function changeSort(value) {
+    const url = new URL(window.location);
+    url.searchParams.set('sort', value);
+    window.location.href = url.toString();
+}
+
+function filterByCategory(categorySlug) {
+    if (categorySlug) {
+        window.location.href = `/category/${categorySlug}/`;
+    } else {
+        // Stay on brand page but reload
+        window.location.reload();
+    }
+}
+</script>
+{% endblock %}

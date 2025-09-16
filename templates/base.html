@@ -1,0 +1,1007 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name }}{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #10b981;      /* Green from your logo */
+            --secondary-color: #0891b2;    /* Teal/cyan from logo */
+            --success-color: #059669;      /* Darker green */
+            --danger-color: #ef4444;       /* Keep red for alerts */
+            --warning-color: #f59e0b;      /* Yellow/gold from logo */
+            --accent-color: #06b6d4;       /* Bright cyan accent */
+        }
+        
+
+        /* Logo positioning and search width adjustments */
+        .container-fluid.px-3 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .navbar-brand.me-2 {
+            margin-right: 0.5rem;
+        }
+
+        /* Make search input wider and better centered */
+        .flex-grow-1 .input-group .form-control {
+            max-width: 400px;
+            min-width: 300px;
+        }
+
+        /* Better spacing for the search group */
+        .flex-grow-1.mx-3 {
+            margin-left: 0.5rem;
+            margin-right: 2rem;
+        }
+        .navbar-brand {
+            color: var(--primary-color) !important;
+        }
+
+        /* Hero section with brand gradient */
+        .bg-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #059669, #0e7490);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-outline-light:hover {
+            background-color: #165e83;
+            border-color: #165e83;
+        }
+
+        .btn-outline-primary {
+            color: #165e83;
+            border-color: #165e83;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #165e83;
+            border-color: #165e83;
+        }
+
+        /* Change the top bar background color */
+        .bg-dark {
+            background-color: #165e83 !important;
+        }
+                
+        .product-card {
+            transition: transform 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .price-old {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+        
+        .price-new {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        .discount-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--danger-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .suggestion-item {
+            padding: 10px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f9fafb;
+        }
+        
+        .vehicle-filter-modal .modal-dialog {
+            max-width: 600px;
+        }
+        
+        .vehicle-brand-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        
+        .vehicle-brand-item {
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .vehicle-brand-item:hover,
+        .vehicle-brand-item.selected {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
+        
+        .vehicle-model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .vehicle-model-item {
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .vehicle-model-item:hover,
+        .vehicle-model-item.selected {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
+        
+        .category-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        /* Accent elements */
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+
+        .border-primary {
+            border-color: var(--primary-color) !important;
+        }
+        
+        .footer {
+            background-color: #1f2937;
+            color: #d1d5db;
+            padding: 40px 0 20px;
+        }
+        
+        .footer h5 {
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .footer a {
+            color: #d1d5db;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .vehicle-brand-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .vehicle-model-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <!-- Top Bar -->
+        <div class="bg-dark text-white py-2">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <small class="badge bg-warning text-dark px-2 py-1">
+                            <i class="fas fa-gift me-1"></i>EMI Available
+                        </small>
+                    </div>
+                    <div class="col-md-8 text-center">
+                        <small class="fw-bold">
+                            <span class="text-warning">⚡</span> 
+                            EMI: PURCHASE OVER ৳5,000 TO AVAIL 3-36 MONTH EMI FACILITIES 
+                            <span class="text-warning">⚡</span>
+                        </small>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <small>
+                            <i class="fas fa-phone-alt text-success me-1"></i>
+                            <a href="tel:+8801885000060" class="text-white text-decoration-none">
+                                +880 18850-00060
+                            </a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+            <div class="container-fluid px-3">
+                <a class="navbar-brand me-2" href="{% url 'home' %}">
+                    <img src="/static/images/logo.png" alt="GrandShopBD" height="60" class="me-1">
+                </a>
+                
+                <!-- Mobile Toggle -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- Search Bar centered and wider -->
+                <div class="flex-grow-1 mx-5 d-none d-lg-block">
+                    <div class="position-relative">
+                        <div class="input-group justify-content-center">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search for parts..." style="max-width: 400px;">
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#vehicleFilterModal">
+                                <i class="fas fa-car me-1"></i>Search by Vehicle
+                            </button>
+                            <button class="btn btn-primary" type="button" onclick="performSearch()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="searchSuggestions" class="search-suggestions" style="display: none;"></div>
+                    </div>
+                </div>
+                
+                <!-- Cart on the right -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{% url 'cart' %}">
+                                <i class="fas fa-shopping-cart"></i>
+                                Cart
+                                {% if cart_count > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        {{ cart_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        
+        <!-- Category Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-top">
+            <div class="container">
+                <div class="navbar-nav mx-auto">
+                    {% for category in main_categories %}
+                        <a class="nav-link" href="{{ category.get_absolute_url }}">
+                            {% if category.icon %}
+                                <i class="{{ category.icon }} me-1"></i>
+                            {% endif %}
+                            {{ category.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <!-- Messages -->
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Vehicle Filter Modal -->
+    <div class="modal fade vehicle-filter-modal" id="vehicleFilterModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-search text-primary me-2"></i>
+                        Search by Vehicle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Find parts compatible with your vehicle</p>
+                    
+                    <!-- Step 1: Select Brand -->
+                    <div id="brandStep" class="filter-step">
+                        <h6 class="text-primary mb-3">• Step 1: Select Brand</h6>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Search brand..." id="brandSearch">
+                        </div>
+                        <div class="vehicle-brand-grid" id="brandGrid">
+                            <!-- Brands will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Select Model -->
+                    <div id="modelStep" class="filter-step" style="display: none;">
+                        <h6 class="text-primary mb-3">• Step 2: Vehicle Model</h6>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="goBackToStep('brand')">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </button>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Search model..." id="modelSearch">
+                        </div>
+                        <div class="vehicle-model-grid" id="modelGrid">
+                            <!-- Models will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Select Year -->
+                    <div id="yearStep" class="filter-step" style="display: none;">
+                        <h6 class="text-primary mb-3">• Step 3: Manufacturing Year</h6>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="goBackToStep('model')">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </button>
+                        <div class="row" id="yearGrid">
+                            <!-- Years will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4: Select Chassis (Optional) -->
+                    <div id="chassisStep" class="filter-step" style="display: none;">
+                        <h6 class="text-primary mb-3">• Step 4: Chassis Code (Optional)</h6>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="goBackToStep('year')">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </button>
+                        <div class="row" id="chassisGrid">
+                            <!-- Chassis codes will be loaded here -->
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="skipChassis()">
+                                <i class="fas fa-forward me-1"></i>Skip this step
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- VIN Alternative -->
+                    <div class="mt-4 pt-3 border-top">
+                        <a href="#" class="text-primary" onclick="showVinSearch()">
+                            <i class="fas fa-search me-1"></i>Search with VIN number instead
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="searchPartsBtn" onclick="searchParts()" disabled>
+                        <i class="fas fa-search me-1"></i>Search Parts
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <h5>GrandShopBD</h5>
+                    <p>Quality automotive parts for secure life. Your trusted partner for genuine car parts in Bangladesh.</p>
+                    <div>
+                        <a href="#" class="me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="me-3"><i class="fab fa-youtube"></i></a>
+                        <a href="#" class="me-3"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'home' %}">Home</a></li>
+                        <li><a href="{% url 'product_list' %}">Products</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h5>Categories</h5>
+                    <ul class="list-unstyled">
+                        {% for category in main_categories|slice:":4" %}
+                            <li><a href="{{ category.get_absolute_url }}">{{ category.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="col-md-2">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Track Order</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Contact Info</h5>
+                    <p>
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Dhaka, Bangladesh
+                    </p>
+                    <p>
+                        <i class="fas fa-phone me-2"></i>
+                        +880 1234-567890
+                    </p>
+                    <p>
+                        <i class="fas fa-envelope me-2"></i>
+                        info@grandshopbd.com
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2024 GrandShopBD. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="#" class="me-3">Privacy Policy</a>
+                    <a href="#" class="me-3">Terms of Service</a>
+                    <a href="#">Sitemap</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // CSRF Token for AJAX requests
+        const csrfToken = '{{ csrf_token }}';
+        
+        // Vehicle Filter Variables
+        let selectedBrand = null;
+        let selectedModel = null;
+        let selectedYear = null;
+        let selectedChassis = null;
+        
+        // Initialize vehicle filter modal
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVehicleBrands();
+            initializeSearch();
+        });
+        
+        // Search functionality
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const suggestionsDiv = document.getElementById('searchSuggestions');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+                
+                if (query.length >= 2) {
+                    searchTimeout = setTimeout(() => {
+                        fetchSearchSuggestions(query);
+                    }, 300);
+                } else {
+                    suggestionsDiv.style.display = 'none';
+                }
+            });
+            
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                    suggestionsDiv.style.display = 'none';
+                }
+            });
+        }
+        
+        function fetchSearchSuggestions(query) {
+            fetch(`/ajax/search/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySearchSuggestions(data.results);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        
+        function displaySearchSuggestions(results) {
+            const suggestionsDiv = document.getElementById('searchSuggestions');
+            
+            if (results.length === 0) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            results.forEach(product => {
+                html += `
+                    <div class="suggestion-item" onclick="selectProduct('${product.url}')">
+                        <div class="d-flex align-items-center">
+                            ${product.image ? `<img src="${product.image}" width="40" height="40" class="me-3">` : ''}
+                            <div>
+                                <div class="fw-medium">${product.name}</div>
+                                <small class="text-muted">৳${product.price}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            suggestionsDiv.innerHTML = html;
+            suggestionsDiv.style.display = 'block';
+        }
+        
+        function selectProduct(url) {
+            window.location.href = url;
+        }
+        
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                window.location.href = `/search/?q=${encodeURIComponent(query)}`;
+            }
+        }
+        
+        // Vehicle Filter Functions
+        function loadVehicleBrands() {
+        // Fetch brands from database via AJAX
+        fetch('/ajax/vehicle-brands/')
+            .then(response => response.json())
+            .then(data => {
+                displayVehicleBrands(data.brands);
+            })
+            .catch(error => {
+                console.error('Error loading vehicle brands:', error);
+                // Fallback to hardcoded brands if AJAX fails
+                loadFallbackBrands();
+            });
+    }
+
+
+    function displayVehicleBrands(brands) {
+        const brandGrid = document.getElementById('brandGrid');
+        if (!brandGrid) return;
+        
+        let html = '';
+        
+        if (brands.length === 0) {
+            html = '<div class="col-12 text-center"><p class="text-muted">No vehicle brands available. Please add brands in admin panel.</p></div>';
+        } else {
+            brands.forEach(brand => {
+                const logoUrl = brand.logo ? `/media/${brand.logo}` : '';
+                html += `
+                    <div class="vehicle-brand-item" onclick="selectBrand(${brand.id}, '${brand.name}')">
+                        ${logoUrl ? `<img src="${logoUrl}" alt="${brand.name}" class="mb-2" style="max-height: 40px; max-width: 80px;" onerror="this.style.display='none'">` : `<i class="fas fa-car fa-2x text-primary mb-2"></i>`}
+                        <div class="fw-medium">${brand.name}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        brandGrid.innerHTML = html;
+    }
+
+    function loadFallbackBrands() {
+        // Fallback hardcoded brands if database fails
+        const fallbackBrands = [
+            {id: 1, name: 'TOYOTA', logo: null},
+            {id: 2, name: 'HONDA', logo: null},
+            {id: 3, name: 'NISSAN', logo: null},
+            {id: 4, name: 'MITSUBISHI', logo: null},
+            {id: 5, name: 'MAZDA', logo: null},
+            {id: 6, name: 'LEXUS', logo: null},
+            {id: 7, name: 'HYUNDAI', logo: null}
+        ];
+        
+        displayVehicleBrands(fallbackBrands);
+    }
+
+    function selectBrand(brandId, brandName) {
+        selectedBrand = {id: brandId, name: brandName};
+        
+        // Mark as selected
+        document.querySelectorAll('.vehicle-brand-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        event.target.closest('.vehicle-brand-item').classList.add('selected');
+        
+        // Load models
+        loadVehicleModels(brandId);
+    }
+
+    function loadVehicleModels(brandId) {
+        fetch(`/ajax/vehicle-models/?brand_id=${brandId}`)
+            .then(response => response.json())
+            .then(data => {
+                displayVehicleModels(data.models);
+                showStep('model');
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function displayVehicleModels(models) {
+        const modelGrid = document.getElementById('modelGrid');
+        if (!modelGrid) return;
+        
+        let html = '';
+        
+        models.forEach(model => {
+            html += `
+                <div class="vehicle-model-item" onclick="selectModel(${model.id}, '${model.name}')">
+                    ${model.image ? `<img src="${model.image}" alt="${model.name}" class="mb-2" style="max-height: 60px;" onerror="this.style.display='none'">` : ''}
+                    <div class="fw-medium">${model.name}</div>
+                </div>
+            `;
+        });
+        
+        modelGrid.innerHTML = html;
+    }
+
+    function selectModel(modelId, modelName) {
+        selectedModel = {id: modelId, name: modelName};
+        
+        // Mark as selected
+        document.querySelectorAll('.vehicle-model-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        event.target.closest('.vehicle-model-item').classList.add('selected');
+        
+        // Load years
+        loadVehicleYears(modelId);
+    }
+
+    function loadVehicleYears(modelId) {
+        fetch(`/ajax/vehicle-years/?model_id=${modelId}`)
+            .then(response => response.json())
+            .then(data => {
+                displayVehicleYears(data.years);
+                showStep('year');
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function displayVehicleYears(years) {
+        const yearGrid = document.getElementById('yearGrid');
+        if (!yearGrid) return;
+        
+        let html = '';
+        
+        years.forEach(year => {
+            html += `
+                <div class="col-3 mb-2">
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="selectYear(${year.id}, ${year.year})">
+                        ${year.year}
+                    </button>
+                </div>
+            `;
+        });
+        
+        yearGrid.innerHTML = html;
+    }
+
+    function selectYear(yearId, year) {
+        selectedYear = {id: yearId, year: year};
+        
+        // Mark as selected
+        document.querySelectorAll('#yearGrid .btn').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-primary');
+        });
+        event.target.classList.remove('btn-outline-primary');
+        event.target.classList.add('btn-primary');
+        
+        // Load chassis codes
+        loadChassisCodes(yearId);
+    }
+
+    function loadChassisCodes(yearId) {
+        fetch(`/ajax/chassis-codes/?year_id=${yearId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.chassis_codes.length > 0) {
+                    displayChassisCodes(data.chassis_codes);
+                    showStep('chassis');
+                } else {
+                    // No chassis codes, enable search
+                    enableSearchButton();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function displayChassisCodes(chassisCodes) {
+        const chassisGrid = document.getElementById('chassisGrid');
+        if (!chassisGrid) return;
+        
+        let html = '';
+        
+        chassisCodes.forEach(chassis => {
+            html += `
+                <div class="col-6 mb-2">
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="selectChassis(${chassis.id}, '${chassis.code}')">
+                        <div class="fw-medium">${chassis.code}</div>
+                        ${chassis.description ? `<small class="text-muted">${chassis.description}</small>` : ''}
+                    </button>
+                </div>
+            `;
+        });
+        
+        chassisGrid.innerHTML = html;
+    }
+
+    function selectChassis(chassisId, chassisCode) {
+        selectedChassis = {id: chassisId, code: chassisCode};
+        
+        // Mark as selected
+        document.querySelectorAll('#chassisGrid .btn').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-primary');
+        });
+        event.target.classList.remove('btn-outline-primary');
+        event.target.classList.add('btn-primary');
+        
+        enableSearchButton();
+    }
+
+    function skipChassis() {
+        selectedChassis = null;
+        enableSearchButton();
+    }
+
+    function enableSearchButton() {
+        const searchBtn = document.getElementById('searchPartsBtn');
+        if (searchBtn) {
+            searchBtn.disabled = false;
+        }
+    }
+
+    function showStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.filter-step').forEach(stepDiv => {
+            stepDiv.style.display = 'none';
+        });
+        
+        // Show selected step
+        const stepDiv = document.getElementById(step + 'Step');
+        if (stepDiv) {
+            stepDiv.style.display = 'block';
+        }
+    }
+
+    function goBackToStep(step) {
+        if (step === 'brand') {
+            selectedModel = null;
+            selectedYear = null;
+            selectedChassis = null;
+            const searchBtn = document.getElementById('searchPartsBtn');
+            if (searchBtn) searchBtn.disabled = true;
+        } else if (step === 'model') {
+            selectedYear = null;
+            selectedChassis = null;
+            const searchBtn = document.getElementById('searchPartsBtn');
+            if (searchBtn) searchBtn.disabled = true;
+        } else if (step === 'year') {
+            selectedChassis = null;
+            if (selectedYear) {
+                enableSearchButton();
+            }
+        }
+        
+        showStep(step);
+    }
+
+    function searchParts() {
+        let url = '/products/?';
+        
+        if (selectedYear) {
+            url += `vehicle_year=${selectedYear.id}`;
+        }
+        
+        if (selectedChassis) {
+            url += `&chassis=${selectedChassis.id}`;
+        }
+        
+        window.location.href = url;
+    }
+
+    function performSearch() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            const query = searchInput.value.trim();
+            if (query) {
+                window.location.href = `/search/?q=${encodeURIComponent(query)}`;
+            }
+        }
+    }
+
+    function fetchSearchSuggestions(query) {
+        fetch(`/ajax/search/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                displaySearchSuggestions(data.results);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function displaySearchSuggestions(results) {
+        const suggestionsDiv = document.getElementById('searchSuggestions');
+        if (!suggestionsDiv) return;
+        
+        if (results.length === 0) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+        
+        let html = '';
+        results.forEach(product => {
+            html += `
+                <div class="suggestion-item" onclick="selectProduct('${product.url}')">
+                    <div class="d-flex align-items-center">
+                        ${product.image ? `<img src="${product.image}" width="40" height="40" class="me-3 rounded">` : ''}
+                        <div>
+                            <div class="fw-medium">${product.name}</div>
+                            <small class="text-muted">৳${product.price}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        suggestionsDiv.innerHTML = html;
+        suggestionsDiv.style.display = 'block';
+    }
+
+    function selectProduct(url) {
+        window.location.href = url;
+    }
+
+    function showVinSearch() {
+        alert('VIN search feature coming soon! Please use the step-by-step vehicle selection for now.');
+    }
+
+    function addToCart(productId, quantity = 1) {
+    fetch('/add-to-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `product_id=${productId}&quantity=${quantity}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateCartCount(data.cart_count);
+            showToast('Product added to cart!', 'success');
+        } else {
+            showToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error adding product to cart', 'error');
+    });
+}
+
+    function buyNow(productId, quantity = 1) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/buy-now/';
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        
+        const productInput = document.createElement('input');
+        productInput.type = 'hidden';
+        productInput.name = 'product_id';
+        productInput.value = productId;
+        
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'hidden';
+        quantityInput.name = 'quantity';
+        quantityInput.value = quantity;
+        
+        form.appendChild(csrfInput);
+        form.appendChild(productInput);
+        form.appendChild(quantityInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function updateCartCount(count) {
+        const cartBadge = document.querySelector('.navbar .badge');
+        if (cartBadge) {
+            cartBadge.textContent = count;
+            cartBadge.style.display = count > 0 ? 'inline' : 'none';
+        }
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 3000);
+    }
+
+    // Make functions globally available
+    window.addToCart = addToCart;
+    window.buyNow = buyNow;
+
+    // Make functions globally available
+    window.selectBrand = selectBrand;
+    window.selectModel = selectModel;
+    window.selectYear = selectYear;
+    window.selectChassis = selectChassis;
+    window.skipChassis = skipChassis;
+    window.goBackToStep = goBackToStep;
+    window.searchParts = searchParts;
+    window.performSearch = performSearch;
+    window.selectProduct = selectProduct;
+    window.showVinSearch = showVinSearch;
+
+
+</script>

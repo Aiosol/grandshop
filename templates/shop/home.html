@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ site_name }} - Quality Automotive Parts for Bangladesh{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    {% if hero_banners %}
+        <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                {% for banner in hero_banners %}
+                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}" 
+                            {% if forloop.first %}class="active"{% endif %}></button>
+                {% endfor %}
+            </div>
+            
+            <div class="carousel-inner">
+                {% for banner in hero_banners %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        {% if banner.banner_type == 'image' %}
+                            <img src="{{ banner.image.url }}" class="d-block w-100" alt="{{ banner.title }}" style="height: 400px; object-fit: cover;">
+                        {% else %}
+                            <video class="d-block w-100" style="height: 400px; object-fit: cover;" autoplay muted loop>
+                                <source src="{{ banner.video_url }}" type="video/mp4">
+                            </video>
+                        {% endif %}
+                        
+                        <div class="carousel-caption d-none d-md-block">
+                            <h2 class="text-white">{{ banner.title }}</h2>
+                            {% if banner.subtitle %}
+                                <p class="text-white">{{ banner.subtitle }}</p>
+                            {% endif %}
+                            {% if banner.link_url and banner.button_text %}
+                                <a href="{{ banner.link_url }}" class="btn btn-primary btn-lg">{{ banner.button_text }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+    {% else %}
+        <!-- Default Hero -->
+        <div class="bg-primary text-white py-5">
+            <div class="container text-center">
+                <h1 class="display-4 mb-4">Quality Automotive Parts</h1>
+                <p class="lead mb-4">Find the perfect parts for your vehicle with our advanced search system</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="input-group input-group-lg mb-4">
+                            <input type="text" id="heroSearchInput" class="form-control" placeholder="Search for parts, brands, models...">
+                            <button type="button" class="btn btn-light" onclick="performHeroSearch()">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-outline-light btn-lg me-2" data-bs-toggle="modal" data-bs-target="#vehicleFilterModal">
+                            <i class="fas fa-car me-2"></i>Search by Vehicle
+                        </button>
+                        <a href="{% url 'product_list' %}" class="btn btn-light btn-lg">
+                            <i class="fas fa-th-large me-2"></i>Browse All Parts
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Vehicle Brands -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Shop by Vehicle Brand</h2>
+        {% if vehicle_brands %}
+            <div class="row justify-content-center">
+                {% for brand in vehicle_brands %}
+                    <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                        <div class="card h-100 border-0 shadow-sm hover-card" style="cursor: pointer;" onclick="searchByBrand('{{ brand.name }}')">
+                            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                                {% if brand.logo %}
+                                    <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="mb-2" style="max-height: 50px; max-width: 80px;" onerror="this.style.display='none'">
+                                {% else %}
+                                    <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                                {% endif %}
+                                <h6 class="card-title text-center mb-0">{{ brand.name }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Default vehicle brands if none in database -->
+            <div class="row justify-content-center">
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title text-center mb-0">Toyota</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title text-center mb-0">Honda</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title text-center mb-0">Nissan</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title text-center mb-0">Mitsubishi</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title text-center mb-0">Mazda</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-2 mb-4 text-center">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-car fa-2x text-primary mb-2"></i>
+                            <h6 class="card-title text-center mb-0">Lexus</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div class="text-center mt-4">
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#vehicleFilterModal">
+                <i class="fas fa-search me-2"></i>Advanced Vehicle Search
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Featured Products</h2>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-right me-1"></i>View All Products
+            </a>
+        </div>
+        
+        {% if featured_products %}
+            <div class="row">
+                {% for product in featured_products %}
+                    <div class="col-6 col-md-4 col-lg-3 mb-4">
+                        <div class="card product-card h-100 position-relative">
+                            {% if product.get_discount_percentage %}
+                                <div class="discount-badge">-{{ product.get_discount_percentage }}%</div>
+                            {% endif %}
+                            
+                            <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+                                {% with product.images.first as primary_image %}
+                                    {% if primary_image %}
+                                        <img src="{{ primary_image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                            <i class="fas fa-cog text-muted fa-3x"></i>
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </a>
+                            
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">
+                                    <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">
+                                        {{ product.name|truncatechars:50 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted mb-2">{{ product.brand.name }}</small>
+                                
+                                <div class="mt-auto">
+                                    <div class="mb-2">
+                                        {% if product.offer_price %}
+                                            <span class="price-old small">৳{{ product.regular_price|floatformat:0 }}</span>
+                                            <span class="price-new">৳{{ product.offer_price|floatformat:0 }}</span>
+                                        {% else %}
+                                            <span class="price-new">৳{{ product.regular_price|floatformat:0 }}</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if product.is_in_stock %}
+                                        <div class="btn-group w-100" role="group">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addToCart({{ product.id }})">
+                                                Add To Cart
+                                            </button>
+                                            <button type="button" class="btn btn-primary btn-sm flex-grow-1" onclick="buyNow({{ product.id }})">
+                                                Buy Now
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                            Out of Stock
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Default featured products if none in database -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-cog fa-4x text-muted mb-3"></i>
+                        <h4>Featured Products Coming Soon</h4>
+                        <p class="text-muted mb-4">We're adding amazing automotive parts to our featured collection</p>
+                        <a href="{% url 'product_list' %}" class="btn btn-primary">
+                            <i class="fas fa-shopping-bag me-2"></i>Browse All Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Categories -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Shop by Category</h2>
+        {% if categories %}
+            <div class="row">
+                {% for category in categories %}
+                    <div class="col-6 col-md-4 col-lg-3 mb-4">
+                        <a href="{{ category.get_absolute_url }}" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm text-center hover-card">
+                                <div class="card-body py-4">
+                                    {% if category.icon %}
+                                        <i class="{{ category.icon }} category-icon"></i>
+                                    {% elif category.image %}
+                                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="mb-3" style="max-height: 60px;">
+                                    {% else %}
+                                        <i class="fas fa-cog category-icon"></i>
+                                    {% endif %}
+                                    <h6 class="card-title">{{ category.name }}</h6>
+                                    {% if category.products.count > 0 %}
+                                        <small class="text-muted">{{ category.products.count }} products</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Default categories if none in database -->
+            <div class="row">
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-cog category-icon"></i>
+                                <h6 class="card-title">Engine Parts</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-stop-circle category-icon"></i>
+                                <h6 class="card-title">Brake System</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-oil-can category-icon"></i>
+                                <h6 class="card-title">Oils & Fluids</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-filter category-icon"></i>
+                                <h6 class="card-title">Filters</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-bolt category-icon"></i>
+                                <h6 class="card-title">Electrical</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-lightbulb category-icon"></i>
+                                <h6 class="card-title">Lights</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-arrows-alt-v category-icon"></i>
+                                <h6 class="card-title">Suspension</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <a href="{% url 'product_list' %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm text-center">
+                            <div class="card-body py-4">
+                                <i class="fas fa-car category-icon"></i>
+                                <h6 class="card-title">Body Parts</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Features/Benefits -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4">
+                <div class="feature-item">
+                    <i class="fas fa-shipping-fast fa-3x text-primary mb-3"></i>
+                    <h5>Fast Delivery</h5>
+                    <p class="text-muted">Quick delivery across Bangladesh with trusted courier partners</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                    <h5>Genuine Parts</h5>
+                    <p class="text-muted">100% authentic automotive parts from trusted manufacturers</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-item">
+                    <i class="fas fa-tools fa-3x text-primary mb-3"></i>
+                    <h5>Expert Support</h5>
+                    <p class="text-muted">Professional installation guidance and technical support</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="feature-item">
+                    <i class="fas fa-undo fa-3x text-primary mb-3"></i>
+                    <h5>Easy Returns</h5>
+                    <p class="text-muted">Hassle-free return policy within 7 days of purchase</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h3 class="mb-3">Need Help Finding the Right Part?</h3>
+                <p class="lead mb-4">Our expert team is here to help you find the perfect automotive parts for your vehicle</p>
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#vehicleFilterModal">
+                        <i class="fas fa-car me-2"></i>Search by Vehicle
+                    </button>
+                    <a href="tel:+8801234567890" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-phone me-2"></i>Call Us Now
+                    </a>
+                    <a href="{% url 'product_list' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-shopping-bag me-2"></i>Browse All Parts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function performHeroSearch() {
+    const searchInput = document.getElementById('heroSearchInput');
+    if (searchInput && searchInput.value.trim()) {
+        window.location.href = `/search/?q=${encodeURIComponent(searchInput.value.trim())}`;
+    }
+}
+
+function searchByBrand(brandName) {
+    window.location.href = `/search/?q=${encodeURIComponent(brandName)}`;
+}
+
+// Allow Enter key press in hero search
+document.addEventListener('DOMContentLoaded', function() {
+    const heroSearchInput = document.getElementById('heroSearchInput');
+    if (heroSearchInput) {
+        heroSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performHeroSearch();
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.hover-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-item {
+    padding: 1rem;
+}
+
+.feature-item i {
+    transition: color 0.3s ease;
+}
+
+.feature-item:hover i {
+    color: #1d4ed8 !important;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .btn-lg {
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

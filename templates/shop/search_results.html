@@ -1,0 +1,201 @@
+// Search Results Template (templates/shop/search_results.html)
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Search Results{% if query %} for "{{ query }}"{% endif %} - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Search Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    {% if query %}
+                        <h2>Search Results for "{{ query }}"</h2>
+                        <p class="text-muted">{{ products.paginator.count }} products found</p>
+                    {% else %}
+                        <h2>Search Products</h2>
+                        <p class="text-muted">Enter a search term to find products</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <!-- Search Form -->
+                    <form method="get" class="d-flex">
+                        <input type="text" name="q" class="form-control me-2" placeholder="Search products..." value="{{ query }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            {% if query %}
+                <!-- Search Results -->
+                {% if products %}
+                    <div class="row">
+                        {% for product in products %}
+                            <div class="col-6 col-md-4 col-lg-3 mb-4">
+                                <div class="card product-card h-100 position-relative">
+                                    {% if product.get_discount_percentage %}
+                                        <div class="discount-badge">-{{ product.get_discount_percentage }}%</div>
+                                    {% endif %}
+                                    
+                                    <a href="{{ product.get_absolute_url }}" class="text-decoration-none">
+                                        {% with product.images.first as primary_image %}
+                                            {% if primary_image %}
+                                                <img src="{{ primary_image.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                                    <i class="fas fa-image text-muted fa-2x"></i>
+                                                </div>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </a>
+                                    
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="card-title">
+                                            <a href="{{ product.get_absolute_url }}" class="text-decoration-none text-dark">
+                                                {{ product.name|truncatechars:50 }}
+                                            </a>
+                                        </h6>
+                                        
+                                        <small class="text-muted">{{ product.brand.name }}</small>
+                                        
+                                        <div class="mt-auto">
+                                            <div class="mb-2">
+                                                {% if product.offer_price %}
+                                                    <span class="price-old">৳{{ product.regular_price|floatformat:0 }}</span>
+                                                    <span class="price-new">৳{{ product.offer_price|floatformat:0 }}</span>
+                                                {% else %}
+                                                    <span class="price-new">৳{{ product.regular_price|floatformat:0 }}</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if product.is_in_stock %}
+                                                <div class="btn-group w-100" role="group">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addToCart({{ product.id }})">
+                                                        <i class="fas fa-cart-plus"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary btn-sm flex-grow-1" onclick="buyNow({{ product.id }})">
+                                                        Buy Now
+                                                    </button>
+                                                </div>
+                                            {% else %}
+                                                <button type="button" class="btn btn-secondary btn-sm w-100" disabled>
+                                                    Out of Stock
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if products.has_other_pages %}
+                        <nav aria-label="Search results pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if products.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ query }}&page={{ products.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in products.paginator.page_range %}
+                                    {% if page_num == products.number %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?q={{ query }}&page={{ page_num }}">{{ page_num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if products.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?q={{ query }}&page={{ products.next_page_number }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                    
+                {% else %}
+                    <!-- No Results -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                        <h4>No products found for "{{ query }}"</h4>
+                        <p class="text-muted mb-4">Try different keywords or browse our categories</p>
+                        <div class="row justify-content-center">
+                            <div class="col-md-6">
+                                <form method="get" class="mb-3">
+                                    <div class="input-group">
+                                        <input type="text" name="q" class="form-control" placeholder="Try a different search...">
+                                        <button type="submit" class="btn btn-primary">Search</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <a href="{% url 'product_list' %}" class="btn btn-outline-primary">
+                            Browse All Products
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Search Landing -->
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-4x text-primary mb-4"></i>
+                    <h4>Find Your Perfect Parts</h4>
+                    <p class="text-muted mb-4">Search from thousands of automotive parts</p>
+                    
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <form method="get">
+                                <div class="input-group input-group-lg mb-4">
+                                    <input type="text" name="q" class="form-control" placeholder="Search for parts, brands, models..." autofocus>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-2"></i>Search
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Popular Searches -->
+                    <div class="mb-4">
+                        <small class="text-muted">Popular searches:</small>
+                        <div class="mt-2">
+                            <a href="?q=engine oil" class="badge bg-light text-dark text-decoration-none me-2">Engine Oil</a>
+                            <a href="?q=brake pad" class="badge bg-light text-dark text-decoration-none me-2">Brake Pad</a>
+                            <a href="?q=air filter" class="badge bg-light text-dark text-decoration-none me-2">Air Filter</a>
+                            <a href="?q=spark plug" class="badge bg-light text-dark text-decoration-none me-2">Spark Plug</a>
+                            <a href="?q=headlight" class="badge bg-light text-dark text-decoration-none">Headlight</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Alternative Search -->
+                    <div class="row">
+                        <div class="col-md-6 offset-md-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-car text-primary me-2"></i>Search by Vehicle
+                                    </h6>
+                                    <p class="card-text small">Find parts that fit your specific vehicle</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#vehicleFilterModal">
+                                        Select Your Vehicle
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

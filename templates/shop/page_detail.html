@@ -1,0 +1,67 @@
+// Page Detail Template (templates/shop/page_detail.html)
+{% extends 'base.html' %}
+
+{% block title %}{{ page.meta_title|default:page.title }} - {{ site_name }}{% endblock %}
+
+{% block meta_description %}{{ page.meta_description|default:page.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <!-- Page Header -->
+            <div class="mb-4">
+                <h1 class="display-5">{{ page.title }}</h1>
+                <small class="text-muted">Last updated: {{ page.updated_at|date:"F d, Y" }}</small>
+            </div>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                {{ page.content|linebreaks }}
+            </div>
+            
+            <!-- Back Navigation -->
+            <div class="mt-5 pt-4 border-top">
+                <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-content {
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.page-content h2 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.page-content h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.page-content p {
+    margin-bottom: 1rem;
+}
+
+.page-content ul, .page-content ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.page-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    color: #6c757d;
+}
+</style>
+{% endblock %}
