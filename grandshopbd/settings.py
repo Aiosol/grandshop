@@ -1,4 +1,5 @@
-# settings.py
+#grandshopbd/settings.py
+
 import os
 from pathlib import Path
 
@@ -23,7 +24,7 @@ INSTALLED_APPS = [
     'rest_framework',
     
     # Local apps
-    'shop',
+    'shop', 'crm',
      
 ]
 

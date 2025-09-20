@@ -1,0 +1,189 @@
+# CRM Dashboard Template - templates/crm/dashboard.html
+{% extends 'crm/base.html' %}
+
+{% block page_title %}CRM Dashboard{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Orders</h6>
+                        <h3 class="mb-0">{{ total_orders }}</h3>
+                        <small>+{{ orders_today }} today</small>
+                    </div>
+                    <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Revenue</h6>
+                        <h3 class="mb-0">৳{{ total_revenue|floatformat:0 }}</h3>
+                        <small>৳{{ revenue_today|floatformat:0 }} today</small>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Customers</h6>
+                        <h3 class="mb-0">{{ total_customers }}</h3>
+                        <small>+{{ new_customers_today }} today</small>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Active Alerts</h6>
+                        <h3 class="mb-0">{{ active_alerts }}</h3>
+                        <small>{{ low_stock_products }} low stock</small>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Orders</h5>
+                <a href="{% url 'crm:order_management' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order_mgmt in recent_orders %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ order_mgmt.order.order_number }}</strong>
+                                        </td>
+                                        <td>{{ order_mgmt.order.customer_name }}</td>
+                                        <td>৳{{ order_mgmt.order.total_amount|floatformat:0 }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if order_mgmt.order.status == 'delivered' %}success{% elif order_mgmt.order.status == 'shipped' %}info{% elif order_mgmt.order.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                                {{ order_mgmt.order.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ order_mgmt.created_at|date:"M d, H:i" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent orders</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Inventory Alerts</h5>
+                <a href="{% url 'crm:inventory_management' %}" class="btn btn-sm btn-outline-warning">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_alerts %}
+                    {% for alert in recent_alerts %}
+                        <div class="alert alert-custom alert-{% if alert.alert_type == 'out_of_stock' %}out-stock{% else %}low-stock{% endif %} py-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="small">{{ alert.product.name|truncatechars:30 }}</strong>
+                                    <div class="small text-muted">
+                                        {{ alert.get_alert_type_display }} - {{ alert.current_stock }} left
+                                    </div>
+                                </div>
+                                <i class="fas fa-{% if alert.alert_type == 'out_of_stock' %}times-circle text-danger{% else %}exclamation-triangle text-warning{% endif %}"></i>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No active alerts</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Overview -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">This Month Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ orders_this_month }}</h4>
+                        <small class="text-muted">Orders</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">৳{{ revenue_this_month|floatformat:0 }}</h4>
+                        <small class="text-muted">Revenue</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'crm:order_management' %}" class="btn btn-primary">
+                        <i class="fas fa-box me-2"></i>Manage Orders
+                    </a>
+                    <a href="{% url 'crm:customer_management' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-users me-2"></i>Manage Customers
+                    </a>
+                    <a href="/admin/shop/product/add/" class="btn btn-outline-success">
+                        <i class="fas fa-plus me-2"></i>Add New Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

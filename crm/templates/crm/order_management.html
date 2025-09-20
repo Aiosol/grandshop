@@ -1,0 +1,257 @@
+// Order Management Template - templates/crm/order_management.html
+{% extends 'crm/base.html' %}
+
+{% block page_title %}Order Management{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="confirmed" {% if current_filters.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                    <option value="processing" {% if current_filters.status == 'processing' %}selected{% endif %}>Processing</option>
+                    <option value="shipped" {% if current_filters.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                    <option value="delivered" {% if current_filters.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select form-select-sm">
+                    <option value="">All Priority</option>
+                    <option value="low" {% if current_filters.priority == 'low' %}selected{% endif %}>Low</option>
+                    <option value="normal" {% if current_filters.priority == 'normal' %}selected{% endif %}>Normal</option>
+                    <option value="high" {% if current_filters.priority == 'high' %}selected{% endif %}>High</option>
+                    <option value="urgent" {% if current_filters.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Agent</label>
+                <select name="agent" class="form-select form-select-sm">
+                    <option value="">All Agents</option>
+                    {% for agent in agents %}
+                        <option value="{{ agent.id }}" {% if current_filters.agent == agent.id|stringformat:"s" %}selected{% endif %}>
+                            {{ agent.user.get_full_name|default:agent.user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Date From</label>
+                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ current_filters.date_from }}">
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">Date To</label>
+                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ current_filters.date_to }}">
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm me-2">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+                <a href="{% url 'crm:order_management' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div id="bulkActions" class="card mb-4" style="display: none;">
+    <div class="card-body">
+        <form method="post" action="{% url 'crm:bulk_order_operations' %}" onsubmit="return confirmBulkOperation('process')">
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Bulk Operation</label>
+                    <select name="operation_type" class="form-select" required>
+                        <option value="">Select Operation</option>
+                        <option value="courier_assign">Assign Courier</option>
+                        <option value="status_update">Update Status</option>
+                        <option value="label_generate">Generate Labels</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label">Courier Service</label>
+                    <select name="courier_service" class="form-select">
+                        <option value="">Select Courier</option>
+                        <option value="steadfast">Steadfast</option>
+                        <option value="pathao">Pathao</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label">New Status</label>
+                    <select name="new_status" class="form-select">
+                        <option value="">Select Status</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-bulk text-white">
+                        <i class="fas fa-play me-1"></i>Execute
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Hidden fields for selected orders -->
+            <div id="selectedOrders"></div>
+        </form>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Orders ({{ page_obj.paginator.count }} total)</h5>
+    </div>
+    <div class="card-body">
+        {% if orders %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="30">
+                                <input type="checkbox" onchange="toggleSelectAll(this)">
+                            </th>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Agent</th>
+                            <th>Courier</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order_mgmt in orders %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="selected_items" value="{{ order_mgmt.order.id }}" onchange="toggleBulkActions()">
+                                </td>
+                                <td>
+                                    <strong>{{ order_mgmt.order.order_number }}</strong>
+                                </td>
+                                <td>
+                                    <div>{{ order_mgmt.order.customer_name }}</div>
+                                    <small class="text-muted">{{ order_mgmt.order.customer_phone }}</small>
+                                </td>
+                                <td>৳{{ order_mgmt.order.total_amount|floatformat:0 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if order_mgmt.order.status == 'delivered' %}success{% elif order_mgmt.order.status == 'shipped' %}info{% elif order_mgmt.order.status == 'cancelled' %}danger{% else %}warning{% endif %}">
+                                        {{ order_mgmt.order.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if order_mgmt.priority == 'urgent' %}danger{% elif order_mgmt.priority == 'high' %}warning{% else %}secondary{% endif %}">
+                                        {{ order_mgmt.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if order_mgmt.assigned_agent %}
+                                        {{ order_mgmt.assigned_agent.user.get_full_name|default:order_mgmt.assigned_agent.user.username }}
+                                    {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order_mgmt.courier_assigned %}
+                                        <span class="badge bg-info">{{ order_mgmt.courier_assigned }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ order_mgmt.created_at|date:"M d, H:i" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ order_mgmt.order.get_absolute_url }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="/admin/crm/ordermanagement/{{ order_mgmt.id }}/change/" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Order pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in current_filters.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% for key, value in current_filters.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5>No orders found</h5>
+                <p class="text-muted">Try adjusting your filter criteria</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update selected orders for bulk operations
+function toggleBulkActions() {
+    const checkboxes = document.querySelectorAll('input[name="selected_items"]:checked');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedOrders = document.getElementById('selectedOrders');
+    
+    // Clear previous selections
+    selectedOrders.innerHTML = '';
+    
+    if (checkboxes.length > 0) {
+        bulkActions.style.display = 'block';
+        
+        // Add hidden inputs for selected orders
+        checkboxes.forEach(checkbox => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'order_ids';
+            input.value = checkbox.value;
+            selectedOrders.appendChild(input);
+        });
+    } else {
+        bulkActions.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

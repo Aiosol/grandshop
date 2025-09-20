@@ -1,0 +1,295 @@
+// Campaign Management Template - templates/crm/campaign_management.html
+{% extends 'crm/base.html' %}
+
+{% block page_title %}Campaign Management{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Total Campaigns</h6>
+                        <h3 class="mb-0">{{ total_campaigns }}</h3>
+                    </div>
+                    <i class="fas fa-bullhorn fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Active Campaigns</h6>
+                        <h3 class="mb-0">{{ active_campaigns }}</h3>
+                    </div>
+                    <i class="fas fa-play fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">Emails Sent</h6>
+                        <h3 class="mb-0">{{ total_emails_sent|floatformat:0 }}</h3>
+                    </div>
+                    <i class="fas fa-envelope fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">SMS Sent</h6>
+                        <h3 class="mb-0">{{ total_sms_sent|floatformat:0 }}</h3>
+                    </div>
+                    <i class="fas fa-sms fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campaigns List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Email/SMS Campaigns</h5>
+        <a href="/admin/crm/campaignmanagement/add/" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Create Campaign
+        </a>
+    </div>
+    <div class="card-body">
+        {% if campaigns %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Campaign Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Recipients</th>
+                            <th>Sent</th>
+                            <th>Performance</th>
+                            <th>Cost</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campaign in campaigns %}
+                            <tr>
+                                <td>
+                                    <strong>{{ campaign.name }}</strong>
+                                    {% if campaign.subject %}
+                                        <div class="small text-muted">{{ campaign.subject|truncatechars:40 }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if campaign.campaign_type == 'email' %}info{% elif campaign.campaign_type == 'sms' %}warning{% else %}primary{% endif %}">
+                                        {{ campaign.get_campaign_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if campaign.status == 'completed' %}success{% elif campaign.status == 'running' %}info{% elif campaign.status == 'failed' %}danger{% elif campaign.status == 'scheduled' %}warning{% else %}secondary{% endif %}">
+                                        {{ campaign.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ campaign.total_recipients|floatformat:0 }}</td>
+                                <td>
+                                    {% if campaign.emails_sent > 0 %}
+                                        <div>📧 {{ campaign.emails_sent }}</div>
+                                    {% endif %}
+                                    {% if campaign.sms_sent > 0 %}
+                                        <div>📱 {{ campaign.sms_sent }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if campaign.emails_sent > 0 %}
+                                        <small>Open: {{ campaign.emails_opened|floatformat:0 }}</small><br>
+                                        <small>Click: {{ campaign.links_clicked|floatformat:0 }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if campaign.actual_cost > 0 %}
+                                        ৳{{ campaign.actual_cost|floatformat:2 }}
+                                    {% elif campaign.estimated_cost > 0 %}
+                                        <span class="text-muted">Est: ৳{{ campaign.estimated_cost|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ campaign.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/admin/crm/campaignmanagement/{{ campaign.id }}/change/" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if campaign.status == 'draft' %}
+                                            <button class="btn btn-outline-success btn-sm" onclick="startCampaign({{ campaign.id }})">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        {% elif campaign.status == 'running' %}
+                                            <button class="btn btn-outline-warning btn-sm" onclick="pauseCampaign({{ campaign.id }})">
+                                                <i class="fas fa-pause"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                <h5>No Campaigns Yet</h5>
+                <p class="text-muted">Create your first email or SMS campaign to engage with customers</p>
+                <a href="/admin/crm/campaignmanagement/add/" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Create First Campaign
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- SMS Gateway Configuration -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">SMS Gateway Configuration</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Configure SMS gateway settings for bulk SMS campaigns</p>
+                <div class="mb-3">
+                    <label class="form-label">Provider</label>
+                    <input type="text" class="form-control" value="SSLCommerz Bulk SMS" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Balance</label>
+                    <input type="text" class="form-control" value="Loading..." readonly id="smsBalance">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rate per SMS</label>
+                    <input type="text" class="form-control" value="৳0.50" readonly>
+                </div>
+                <button class="btn btn-outline-primary" onclick="checkSMSBalance()">
+                    <i class="fas fa-sync me-1"></i>Check Balance
+                </button>
+                <a href="/admin/crm/campaignmanagement/add/" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>Buy SMS Credits
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Email Configuration</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Email delivery settings for campaigns</p>
+                <div class="mb-3">
+                    <label class="form-label">SMTP Provider</label>
+                    <input type="text" class="form-control" value="Gmail SMTP" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Daily Limit</label>
+                    <input type="text" class="form-control" value="500 emails/day" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <span class="badge bg-success">Active</span>
+                </div>
+                <button class="btn btn-outline-primary" onclick="testEmailConnection()">
+                    <i class="fas fa-envelope me-1"></i>Test Connection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function startCampaign(campaignId) {
+    if (confirm('Start this campaign? This will begin sending messages to all recipients.')) {
+        fetch(`/crm/campaigns/${campaignId}/start/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    }
+}
+
+function pauseCampaign(campaignId) {
+    if (confirm('Pause this campaign?')) {
+        fetch(`/crm/campaigns/${campaignId}/pause/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    }
+}
+
+function checkSMSBalance() {
+    document.getElementById('smsBalance').value = 'Checking...';
+    
+    fetch('/crm/sms/balance/', {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('smsBalance').value = data.balance + ' SMS Credits';
+    })
+    .catch(error => {
+        document.getElementById('smsBalance').value = 'Error checking balance';
+    });
+}
+
+function testEmailConnection() {
+    fetch('/crm/email/test/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+    });
+}
+</script>
+{% endblock %}
